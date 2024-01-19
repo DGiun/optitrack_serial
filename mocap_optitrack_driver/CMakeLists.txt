@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(mocap_optitrack_driver)
+# project(mocap_optitrack_driver)
+project(optitrack_serial)
 
 # Default to C++14
 if(NOT CMAKE_CXX_STANDARD)
@@ -62,10 +63,14 @@ target_link_libraries(mocap_optitrack_driver_main
   ${LIBNATNET_SDK_LIBRARY}
 )
 
-ament_target_dependencies(mocap_optitrack_driver ${dependencies})
-target_link_libraries(mocap_optitrack_driver ${LIBNATNET_SDK_LIBRARY})
+# ament_target_dependencies(mocap_optitrack_driver ${dependencies})
+# target_link_libraries(mocap_optitrack_driver ${LIBNATNET_SDK_LIBRARY})
 
-install(DIRECTORY include/${PROJECT_NAME}
+ament_target_dependencies(optitrack_serial ${dependencies})
+target_link_libraries(optitrack_serial ${LIBNATNET_SDK_LIBRARY})
+
+# install(DIRECTORY include/${PROJECT_NAME}
+install(DIRECTORY include/mocap_optitrack_driver
   DESTINATION include/
 )
 

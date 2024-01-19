@@ -1,5 +1,6 @@
 <package format="3">
-  <name>mocap_optitrack_driver</name>
+  <!-- <name>mocap_optitrack_driver</name> -->
+  <name>optitrack_serial</name>
   <version>0.0.1</version>
   <description>
      This is a ROS2 driver providing data from Optitrack motion capture systems.
