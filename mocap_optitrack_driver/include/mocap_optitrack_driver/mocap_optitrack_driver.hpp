@@ -56,6 +56,8 @@
 
 #include "mocap_control/ControlledLifecycleNode.hpp"
 
+#include <boost/asio.hpp>
+
 namespace mocap_optitrack_driver
 {
 
@@ -109,6 +111,15 @@ protected:
   uint16_t server_data_port_;
 
   uint32_t frame_number_{0};
+
+  bool f_marker_pub_;
+  bool f_rigid_pub_;
+
+  // Serial
+  bool f_serial_;
+  std::string port_;
+  uint16_t buad_;
+  uint8_t packet[256];
 };
 
 void NATNET_CALLCONV process_frame_callback(sFrameOfMocapData * data, void * pUserData);

@@ -35,6 +35,7 @@ set(dependencies
   mocap_msgs
   mocap_control
   mocap_control_msgs
+  geometry_msgs
 )
 
 include_directories(
@@ -63,6 +64,15 @@ target_link_libraries(mocap_optitrack_driver_main
   ${LIBNATNET_SDK_LIBRARY}
 )
 
+add_executable(rf_receiver
+  src/rf_receiver.cpp
+)
+ament_target_dependencies(rf_receiver ${dependencies})
+target_link_libraries(rf_receiver
+  ${PROJECT_NAME}
+  ${LIBNATNET_SDK_LIBRARY}
+)
+
 # ament_target_dependencies(mocap_optitrack_driver ${dependencies})
 # target_link_libraries(mocap_optitrack_driver ${LIBNATNET_SDK_LIBRARY})
 
@@ -74,6 +84,10 @@ install(DIRECTORY include/mocap_optitrack_driver
   DESTINATION include/
 )
 
+install(DIRECTORY include/opti_serial
+  DESTINATION include/
+)
+
 install(DIRECTORY
   launch
   config
@@ -82,6 +96,7 @@ install(DIRECTORY
 
 install(TARGETS
   mocap_optitrack_driver_main
+  rf_receiver
   RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
 

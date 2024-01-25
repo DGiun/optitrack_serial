@@ -1,5 +1,7 @@
 mocap_optitrack_driver_node:
   ros__parameters:
+    marker_pub: true
+    rigid_pub: true
     connection_type: "Unicast" # Unicast / Multicast
     server_address: "198.17.0.120"
     local_address: "198.17.0.48"
@@ -15,3 +17,15 @@ mocap_optitrack_driver_node:
     qos_history_policy: "keep_all"         # keep_all / keep_last
     qos_reliability_policy: "best_effort"  # best_effort / reliable
     qos_depth: 10                         # 10 / 100 / 1000
+    serial: true
+    serial_port: "/dev/ttyUSB0"
+    serial_buad: 57600
+
+optitrack_serial:
+  ros__parameters:
+    rigid_id: 1
+    topic_name: "/mavros/vision_pose/pose"
+    ridids_pub: false
+    serial_port: "/dev/ttyUSB0"
+    serial_buad: 57600
+    

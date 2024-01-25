@@ -27,6 +27,9 @@
 #include "mocap_optitrack_driver/mocap_optitrack_driver.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
 
+boost::asio::io_service io;
+boost::asio::serial_port ser(io);
+
 namespace mocap_optitrack_driver
 {
 
@@ -36,12 +39,20 @@ using std::placeholders::_2;
 OptitrackDriverNode::OptitrackDriverNode()
 : ControlledLifecycleNode("mocap_optitrack_driver_node")
 {
+  // Set Parameter
   declare_parameter<std::string>("connection_type", "Unicast");
   declare_parameter<std::string>("server_address", "000.000.000.000");
   declare_parameter<std::string>("local_address", "000.000.000.000");
   declare_parameter<std::string>("multicast_address", "000.000.000.000");
   declare_parameter<uint16_t>("server_command_port", 0);
   declare_parameter<uint16_t>("server_data_port", 0);
+  declare_parameter<bool>("marker_pub", true);
+  declare_parameter<bool>("rigid_pub", true);
+
+  // Serial Port
+  declare_parameter<bool>("serial", false);
+  declare_parameter<std::string>("serial_port", "/dev/ttyUSB0");
+  declare_parameter<uint16_t>("serial_buad", 57600);
 
   client = new NatNetClient();
   client->SetFrameReceivedCallback(process_frame_callback, this);
@@ -49,6 +60,7 @@ OptitrackDriverNode::OptitrackDriverNode()
 
 OptitrackDriverNode::~OptitrackDriverNode()
 {
+  if(ser.is_open())  ser.close();
 }
 
 void OptitrackDriverNode::set_settings_optitrack()
@@ -136,7 +148,7 @@ OptitrackDriverNode::process_frame(sFrameOfMocapData * data)
   std::map<int, std::vector<mocap_msgs::msg::Marker>> marker2rb;
 
   // Markers
-  if (mocap_markers_pub_->get_subscription_count() > 0) {
+  if (mocap_markers_pub_->get_subscription_count() > 0 && f_marker_pub_) {
     mocap_msgs::msg::Markers msg;
     msg.header.stamp = now() - frame_delay;
     msg.header.frame_id = "map";
@@ -164,7 +176,7 @@ OptitrackDriverNode::process_frame(sFrameOfMocapData * data)
     mocap_markers_pub_->publish(msg);
   }
 
-  if (mocap_rigid_body_pub_->get_subscription_count() > 0) {
+  if (mocap_rigid_body_pub_->get_subscription_count() > 0 && f_rigid_pub_) {
     mocap_msgs::msg::RigidBodies msg_rb;
     msg_rb.header.stamp = now() - frame_delay;
     msg_rb.header.frame_id = "map";
@@ -188,6 +200,70 @@ OptitrackDriverNode::process_frame(sFrameOfMocapData * data)
 
     mocap_rigid_body_pub_->publish(msg_rb);
   }
+
+  // Serial Port
+  if (mocap_rigid_body_pub_->get_subscription_count() > 0 && f_serial_){
+    uint16_t head = 0xFB01; // 0xFB: Header, 0x01: Pose
+    uint8_t idx=0;
+    uint8_t temp_c;
+    float temp_f;
+
+    // Header - 2 byte
+    memcpy(packet,&head,sizeof(uint16_t));
+    idx += sizeof(uint16_t);
+    
+    // Data Size - 1 byte , Data Size = 3 +(number of rigid * 25) +1
+    temp_c = static_cast<uint8_t>( 4 +(data->nRigidBodies*25) );
+    memcpy(packet+idx,&temp_c,sizeof(uint8_t));
+    idx += sizeof(uint8_t);
+    
+    // Payload - number of rigid * 25 byte
+    for(size_t i=0; i<static_cast<uint8_t>(data->nRigidBodies); ++i){
+      // ID - 1 byte
+      temp_c = static_cast<uint8_t>(data->RigidBodies[i].ID);
+      memcpy(packet+idx,&temp_c,sizeof(uint8_t));
+      idx += sizeof(uint8_t);
+
+      // Position - 12 byte
+      memcpy(packet+idx,&(data->RigidBodies[i].x),sizeof(float));
+      idx += sizeof(float);
+      memcpy(packet+idx,&(data->RigidBodies[i].y),sizeof(float));
+      idx += sizeof(float);
+      memcpy(packet+idx,&(data->RigidBodies[i].z),sizeof(float));
+      idx += sizeof(float);
+
+      // Quaternion(Vector) - 12 byte
+      if(data->RigidBodies[i].qw >= 0){
+        memcpy(packet + idx, &(data->RigidBodies[i].qx), sizeof(float));
+        idx += sizeof(float);
+        memcpy(packet + idx, &(data->RigidBodies[i].qy), sizeof(float));
+        idx += sizeof(float);
+        memcpy(packet + idx, &(data->RigidBodies[i].qz), sizeof(float));
+        idx += sizeof(float);
+      }
+      else{
+        temp_f = -1*data->RigidBodies[i].qx;
+        memcpy(packet + idx, &temp_f, sizeof(float));
+        idx += sizeof(float);
+        temp_f = -1*data->RigidBodies[i].qy;
+        memcpy(packet + idx, &temp_f, sizeof(float));
+        idx += sizeof(float);
+        temp_f = -1*data->RigidBodies[i].qz;
+        memcpy(packet + idx, &temp_f, sizeof(float));
+        idx += sizeof(float);
+      }
+    }
+
+    // CRC - 1 byte
+    temp_c = 0x00;
+    for(size_t i=0; i<idx-1; ++i){
+      temp_c ^= *(packet + i);
+    }
+    memcpy(packet + idx, &temp_c, sizeof(uint8_t));
+    idx += sizeof(uint8_t);
+
+    ser.write_some(boost::asio::buffer(&packet, idx));
+  }
 }
 
 using CallbackReturnT =
@@ -207,6 +283,18 @@ OptitrackDriverNode::on_configure(const rclcpp_lifecycle::State & state)
     "rigid_bodies", rclcpp::QoS(1000));
 
   connect_optitrack();
+
+  // Open Serial Port
+  if (f_serial_)  {
+    ser.open(port_);
+    ser.set_option(boost::asio::serial_port_base::baud_rate(buad_));
+    if (ser.is_open())    {
+      RCLCPP_INFO(get_logger(), "Serial Port initialized\n");
+    }
+    else    {
+      RCLCPP_INFO(get_logger(), "Fail Serial Port initialized\n");
+    }
+  }
 
   RCLCPP_INFO(get_logger(), "Configured!\n");
 
@@ -354,6 +442,13 @@ OptitrackDriverNode::initParameters()
   get_parameter<std::string>("multicast_address", multicast_address_);
   get_parameter<uint16_t>("server_command_port", server_command_port_);
   get_parameter<uint16_t>("server_data_port", server_data_port_);
+  get_parameter<bool>("marker_pub", f_marker_pub_);
+  get_parameter<bool>("rigid_pub", f_rigid_pub_);
+
+  // Serial Port
+  get_parameter<bool>("serial", f_serial_);
+  get_parameter<std::string>("serial_port", port_);
+  get_parameter<uint16_t>("serial_buad", buad_);
 }
 
 }  // namespace mocap_optitrack_driver
