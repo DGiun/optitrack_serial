@@ -17,7 +17,7 @@ git clone https://github.com/DGiun/optitrack_serial.git
 Install dependencies:
 ```
 rosdep install --from-paths src --ignore-src -r -y
-vcs import < mocap4ros2_optitrack/dependency_repos.repos
+vcs import < optitrack_serial/dependency_repos.repos
 ```
 Compiling workspace:
 ```
