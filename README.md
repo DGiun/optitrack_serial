@@ -1,23 +1,13 @@
 # mocap_optitrack_driver
 
-[![GitHub Action Status](https://github.com/MOCAP4ROS2-Project/mocap4ros2_optitrack/actions/workflows/main.yaml/badge.svg)](https://github.com/MOCAP4ROS2-Project/mocap_optitrack_driver)
-
-[![codecov](https://codecov.io/gh/MOCAP4ROS2-Project/mocap_optitrack_driver/main/graph/badge.svg)](https://codecov.io/gh/MOCAP4ROS2-Project/mocap_optitrack_driver)
-
-Create workspace:
+## dependencies
+Download dependencies repo:
 ```
-mkdir -p mocap_ws/src && cd mocap_ws/src
-```
-Download optitrack repo:
-```
-git clone https://github.com/MOCAP4ROS2-Project/mocap4r2_msgs.git
-git clone https://github.com/MOCAP4ROS2-Project/mocap4r2.git
-git clone https://github.com/DGiun/optitrack_serial.git
+git clone https://github.com/MOCAP4ROS2-Project/mocap4ros2_optitrack.git
 ```
 Install dependencies:
 ```
-rosdep install --from-paths src --ignore-src -r -y
-vcs import < optitrack_serial/dependency_repos.repos
+vcs import < mocap4ros2_optitrack/dependency_repos.repos
 ```
 Compiling workspace:
 ```
@@ -27,13 +17,22 @@ Source workspace:
 ```
 source install/setup.bash
 ```
-Setup your optitrack configuration:
+## Serial Repo
+Download Serial repo:
 ```
-mocap_ws/src/mocap4ros2_optitrack/mocap_optitrack_driver/config/mocap_optitrack_driver_params.yaml
+git clone https://github.com/DGiun/optitrack_serial.git
+```
+Source workspace:
+```
+source install/setup.bash
+```
+if Setup your optitrack configuration:
+```
+/src/optitrack_serial/mocap_optitrack_driver/config/mocap_optitrack_driver_params.yaml
 ```
 Launch optitrack system:
 ```
-ros2 launch mocap_optitrack_driver optitrack2.launch.py
+ros2 launch optitrack_serial optitrack2.launch.py
 ```
 Check that Optitrack configuration works fine and is connected. As the driver node is a lifecycle node, you should transition to activate:
 ```

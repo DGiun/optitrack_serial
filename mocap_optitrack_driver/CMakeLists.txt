@@ -22,19 +22,19 @@ find_package(rclcpp REQUIRED)
 find_package(rclcpp_lifecycle REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
-find_package(mocap_msgs REQUIRED)
+find_package(mocap4r2_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
-find_package(mocap_control_msgs REQUIRED)
-find_package(mocap_control REQUIRED)
+find_package(mocap4r2_control_msgs REQUIRED)
+find_package(mocap4r2_control REQUIRED)
 
 set(dependencies
   rclcpp
   rclcpp_lifecycle
   tf2
   tf2_ros
-  mocap_msgs
-  mocap_control
-  mocap_control_msgs
+  mocap4r2_msgs
+  mocap4r2_control
+  mocap4r2_control_msgs
   geometry_msgs
 )
 

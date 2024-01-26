@@ -31,10 +31,10 @@
 
 #include "rclcpp/time.hpp"
 
-#include "mocap_msgs/msg/marker.hpp"
-#include "mocap_msgs/msg/markers.hpp"
-#include "mocap_msgs/msg/rigid_body.hpp"
-#include "mocap_msgs/msg/rigid_bodies.hpp"
+#include "mocap4r2_msgs/msg/marker.hpp"
+#include "mocap4r2_msgs/msg/markers.hpp"
+#include "mocap4r2_msgs/msg/rigid_body.hpp"
+#include "mocap4r2_msgs/msg/rigid_bodies.hpp"
 
 #include "std_msgs/msg/empty.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
@@ -54,14 +54,14 @@
 #include <NatNetCAPI.h>
 #include <NatNetClient.h>
 
-#include "mocap_control/ControlledLifecycleNode.hpp"
+#include "mocap4r2_control/ControlledLifecycleNode.hpp"
 
 #include <boost/asio.hpp>
 
 namespace mocap_optitrack_driver
 {
 
-class OptitrackDriverNode : public mocap_control::ControlledLifecycleNode
+class OptitrackDriverNode : public mocap4r2_control::ControlledLifecycleNode
 {
 public:
   OptitrackDriverNode();
@@ -86,8 +86,8 @@ public:
   void process_frame(sFrameOfMocapData * data);
 
 protected:
-  void control_start(const mocap_control_msgs::msg::Control::SharedPtr msg) override;
-  void control_stop(const mocap_control_msgs::msg::Control::SharedPtr msg) override;
+  void control_start(const mocap4r2_control_msgs::msg::Control::SharedPtr msg) override;
+  void control_stop(const mocap4r2_control_msgs::msg::Control::SharedPtr msg) override;
 
   NatNetClient * client;
 
@@ -99,8 +99,8 @@ protected:
   sFrameOfMocapData latest_data;
   sRigidBodyData latest_body_frame_data;
 
-  rclcpp_lifecycle::LifecyclePublisher<mocap_msgs::msg::Markers>::SharedPtr mocap_markers_pub_;
-  rclcpp_lifecycle::LifecyclePublisher<mocap_msgs::msg::RigidBodies>::SharedPtr
+  rclcpp_lifecycle::LifecyclePublisher<mocap4r2_msgs::msg::Markers>::SharedPtr mocap_markers_pub_;
+  rclcpp_lifecycle::LifecyclePublisher<mocap4r2_msgs::msg::RigidBodies>::SharedPtr
     mocap_rigid_body_pub_;
 
   std::string connection_type_;

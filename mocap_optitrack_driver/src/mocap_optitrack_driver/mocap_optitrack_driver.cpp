@@ -21,8 +21,8 @@
 #include <vector>
 #include <memory>
 
-#include "mocap_msgs/msg/marker.hpp"
-#include "mocap_msgs/msg/markers.hpp"
+#include "mocap4r2_msgs/msg/marker.hpp"
+#include "mocap4r2_msgs/msg/markers.hpp"
 
 #include "mocap_optitrack_driver/mocap_optitrack_driver.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
@@ -89,7 +89,7 @@ bool OptitrackDriverNode::stop_optitrack()
 }
 
 void
-OptitrackDriverNode::control_start(const mocap_control_msgs::msg::Control::SharedPtr msg)
+OptitrackDriverNode::control_start(const mocap4r2_control_msgs::msg::Control::SharedPtr msg)
 {
   (void)msg;
   trigger_transition(
@@ -97,7 +97,7 @@ OptitrackDriverNode::control_start(const mocap_control_msgs::msg::Control::Share
 }
 
 void
-OptitrackDriverNode::control_stop(const mocap_control_msgs::msg::Control::SharedPtr msg)
+OptitrackDriverNode::control_stop(const mocap4r2_control_msgs::msg::Control::SharedPtr msg)
 {
   (void)msg;
   trigger_transition(
@@ -145,11 +145,11 @@ OptitrackDriverNode::process_frame(sFrameOfMocapData * data)
   frame_number_++;
   rclcpp::Duration frame_delay = rclcpp::Duration(get_optitrack_system_latency(data));
 
-  std::map<int, std::vector<mocap_msgs::msg::Marker>> marker2rb;
+  std::map<int, std::vector<mocap4r2_msgs::msg::Marker>> marker2rb;
 
   // Markers
   if (mocap_markers_pub_->get_subscription_count() > 0 && f_marker_pub_) {
-    mocap_msgs::msg::Markers msg;
+    mocap4r2_msgs::msg::Markers msg;
     msg.header.stamp = now() - frame_delay;
     msg.header.frame_id = "map";
     msg.frame_number = frame_number_;
@@ -161,8 +161,8 @@ OptitrackDriverNode::process_frame(sFrameOfMocapData * data)
       int modelID, markerID;
       NatNet_DecodeID(marker_data.ID, &modelID, &markerID);
 
-      mocap_msgs::msg::Marker marker;
-      marker.id_type = mocap_msgs::msg::Marker::USE_INDEX;
+      mocap4r2_msgs::msg::Marker marker;
+      marker.id_type = mocap4r2_msgs::msg::Marker::USE_INDEX;
       marker.marker_index = i;
       marker.translation.x = marker_data.x;
       marker.translation.y = marker_data.y;
@@ -177,13 +177,13 @@ OptitrackDriverNode::process_frame(sFrameOfMocapData * data)
   }
 
   if (mocap_rigid_body_pub_->get_subscription_count() > 0 && f_rigid_pub_) {
-    mocap_msgs::msg::RigidBodies msg_rb;
+    mocap4r2_msgs::msg::RigidBodies msg_rb;
     msg_rb.header.stamp = now() - frame_delay;
     msg_rb.header.frame_id = "map";
     msg_rb.frame_number = frame_number_;
 
     for (int i = 0; i < data->nRigidBodies; i++) {
-      mocap_msgs::msg::RigidBody rb;
+      mocap4r2_msgs::msg::RigidBody rb;
 
       rb.rigid_body_name = std::to_string(data->RigidBodies[i].ID);
       rb.pose.position.x = data->RigidBodies[i].x;
@@ -277,9 +277,9 @@ OptitrackDriverNode::on_configure(const rclcpp_lifecycle::State & state)
   (void)state;
   initParameters();
 
-  mocap_markers_pub_ = create_publisher<mocap_msgs::msg::Markers>(
+  mocap_markers_pub_ = create_publisher<mocap4r2_msgs::msg::Markers>(
     "markers", rclcpp::QoS(1000));
-  mocap_rigid_body_pub_ = create_publisher<mocap_msgs::msg::RigidBodies>(
+  mocap_rigid_body_pub_ = create_publisher<mocap4r2_msgs::msg::RigidBodies>(
     "rigid_bodies", rclcpp::QoS(1000));
 
   connect_optitrack();
