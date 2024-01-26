@@ -12,10 +12,10 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
-set(LIBNATNET_SDK_LIBRARY ${CMAKE_CURRENT_SOURCE_DIR}/NatNetSDK/lib/libNatNet.so)
-set(NATNET_INCLUDE_DIR
-  ${CMAKE_CURRENT_SOURCE_DIR}/NatNetSDK/include
-)
+#set(LIBNATNET_SDK_LIBRARY ${CMAKE_CURRENT_SOURCE_DIR}/NatNetSDK/lib/libNatNet.so)
+#set(NATNET_INCLUDE_DIR
+#  ${CMAKE_CURRENT_SOURCE_DIR}/NatNetSDK/include
+#)
 
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
@@ -40,52 +40,53 @@ set(dependencies
 
 include_directories(
   include
-  ${NATNET_INCLUDE_DIR}
+#  ${NATNET_INCLUDE_DIR}
 )
 
-execute_process(
-  COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/install_sdk.py
-  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-)
+#execute_process(
+#  COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/install_sdk.py
+#  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+#)
 
-add_library(${PROJECT_NAME}
-  src/mocap_optitrack_driver/mocap_optitrack_driver.cpp)
+#add_library(${PROJECT_NAME}
+#  src/mocap_optitrack_driver/mocap_optitrack_driver.cpp)
 
-ament_target_dependencies(${PROJECT_NAME} ${dependencies})
-target_compile_definitions(${PROJECT_NAME}
-  PRIVATE "OPTITRACK_BUILDING_LIBRARY")
+#ament_target_dependencies(${PROJECT_NAME} ${dependencies})
+#target_compile_definitions(${PROJECT_NAME}
+#  PRIVATE "OPTITRACK_BUILDING_LIBRARY")
 
-add_executable(mocap_optitrack_driver_main
-  src/mocap_optitrack_driver_main.cpp
-)
-ament_target_dependencies(mocap_optitrack_driver_main ${dependencies})
-target_link_libraries(mocap_optitrack_driver_main
-  ${PROJECT_NAME}
-  ${LIBNATNET_SDK_LIBRARY}
-)
+#add_executable(mocap_optitrack_driver_main
+#  src/mocap_optitrack_driver_main.cpp
+#)
+#ament_target_dependencies(mocap_optitrack_driver_main ${dependencies})
+#target_link_libraries(mocap_optitrack_driver_main
+#  ${PROJECT_NAME}
+#  ${LIBNATNET_SDK_LIBRARY}
+#)
 
 add_executable(rf_receiver
   src/rf_receiver.cpp
 )
 ament_target_dependencies(rf_receiver ${dependencies})
 target_link_libraries(rf_receiver
-  ${PROJECT_NAME}
-  ${LIBNATNET_SDK_LIBRARY}
+  #${PROJECT_NAME} 
+#  rclcpp geometry_msgs
+#  ${LIBNATNET_SDK_LIBRARY}
 )
 
 # ament_target_dependencies(mocap_optitrack_driver ${dependencies})
 # target_link_libraries(mocap_optitrack_driver ${LIBNATNET_SDK_LIBRARY})
 
-ament_target_dependencies(optitrack_serial ${dependencies})
-target_link_libraries(optitrack_serial ${LIBNATNET_SDK_LIBRARY})
+#ament_target_dependencies(optitrack_serial ${dependencies})
+#target_link_libraries(optitrack_serial ${LIBNATNET_SDK_LIBRARY})
 
 # install(DIRECTORY include/${PROJECT_NAME}
-install(DIRECTORY include/mocap_optitrack_driver
-  DESTINATION include/
-)
+#install(DIRECTORY include/mocap_optitrack_driver
+#  DESTINATION include/
+#)
 
 install(DIRECTORY include/opti_serial
-  DESTINATION include/
+  DESTINATION include
 )
 
 install(DIRECTORY
@@ -95,17 +96,19 @@ install(DIRECTORY
 )
 
 install(TARGETS
-  mocap_optitrack_driver_main
+#  mocap_optitrack_driver_main
   rf_receiver
   RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
 
-install(TARGETS
-  ${PROJECT_NAME}
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib
-  RUNTIME DESTINATION bin
-)
+#install(
+#  TARGETS ${PROJECT_NAME}
+#  EXPORT  ${PROJECT_NAME}Targets
+#  ARCHIVE DESTINATION lib
+#  LIBRARY DESTINATION lib
+#  RUNTIME DESTINATION bin
+#  INCLUDES DESTINATION include
+#)
 
 
 if(BUILD_TESTING)
@@ -118,7 +121,7 @@ if(BUILD_TESTING)
   find_package(ament_cmake_uncrustify REQUIRED)
 
 
-  file(GLOB_RECURSE EXCLUDE_FILES NatNetSDK/*)
+#  file(GLOB_RECURSE EXCLUDE_FILES NatNetSDK/*)
 
   ament_copyright(EXCLUDE ${EXCLUDE_FILES})
   ament_cppcheck(
