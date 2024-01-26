@@ -10,8 +10,8 @@ mkdir -p mocap_ws/src && cd mocap_ws/src
 ```
 Download optitrack repo:
 ```
-git clone https://github.com/MOCAP4ROS2-Project/mocap_msgs.git
-git clone https://github.com/MOCAP4ROS2-Project/mocap.git
+git clone https://github.com/MOCAP4ROS2-Project/mocap4r2_msgs.git
+git clone https://github.com/MOCAP4ROS2-Project/mocap4r2.git
 git clone https://github.com/DGiun/optitrack_serial.git
 ```
 Install dependencies:
