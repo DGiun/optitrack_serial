@@ -38,7 +38,7 @@ class opti_serial_pub : public rclcpp::Node
     string topic_name;
     bool f_poses;
     string serial_port;
-    uint16_t serial_buad;
+    int serial_buad;
 
     uint8_t buffer[512];
     vector<uint8_t> packet_buf;

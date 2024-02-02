@@ -16,24 +16,28 @@ int main(int argc, char * argv[])
 opti_serial_pub::opti_serial_pub()
 : Node("optitrack_serial"), count_(0), ios(),port(ios)
 {
-    declare_parameter<uint8_t>("rigid_id", 1);
-    declare_parameter<string>("topic_name", "/mavros/vision_pose/pose");
-    declare_parameter<bool>("ridids_pub", false);
-    declare_parameter<string>("serial_port", "/dev/ttyUSB0");
-    declare_parameter<uint16_t>("serial_buad", 57600);
+    this->declare_parameter<uint8_t>("rigid_id", 1);
+    this->declare_parameter<string>("topic_name", "/mavros/vision_pose/pose");
+    this->declare_parameter<bool>("ridids_pub", false);
+    this->declare_parameter<string>("serial_port", "/dev/ttyUSB0");
+    this->declare_parameter<int>("serial_buad", 57600);
+
+    this->get_parameter<uint8_t>("rigid_id", my_id);
+    this->get_parameter<std::string>("topic_name", topic_name);
+    this->get_parameter<bool>("ridids_pub", f_poses);
+    this->get_parameter<std::string>("serial_port", serial_port);
+    this->get_parameter<int>("serial_buad", serial_buad);
     
-
-    get_parameter<uint8_t>("rigid_id", my_id);
-    get_parameter<std::string>("topic_name", topic_name);
-    get_parameter<std::string>("serial_port", serial_port);
-    get_parameter<uint16_t>("serial_buad", serial_buad);
-
     pose_pub = this->create_publisher<geometry_msgs::msg::PoseStamped>(topic_name, 10);
     poses_pub = this->create_publisher<geometry_msgs::msg::PoseArray>("/opti/poses", 10);
 
     port.open(serial_port);
     port.set_option(boost::asio::serial_port_base::baud_rate(serial_buad));
-    if (port.is_open())  RCLCPP_INFO(get_logger(), "Serial Port Open");
+    if (port.is_open()){
+      RCLCPP_INFO(get_logger(), "Serial Port Open");
+      std::cout<<"Serial Port:"<<serial_port<<std::endl;
+      std::cout<<"Serial Buad:"<<serial_buad<<std::endl;
+    }
     else RCLCPP_INFO(get_logger(), "Serial Port Close");
 
     timer_ = this->create_wall_timer(
@@ -59,7 +63,7 @@ void opti_serial_pub::EnQueue(uint8_t data){
   //std::cout << data << std::end;
   packet_buf.push_back(data);
   uint idx = packet_buf.size();
-  // ROS_INFO("%x %d", data, idx);
+  //RCLCPP_INFO(get_logger(), "data: %x %d", data, idx);
   
   switch (idx)
   {
@@ -75,7 +79,9 @@ void opti_serial_pub::EnQueue(uint8_t data){
             packet_id = packet_size = 0;
             packet_buf.clear();
         }
-        else packet_id = static_cast<uint8_t>(packet_buf.back());
+        else{
+            packet_id = static_cast<uint8_t>(packet_buf.back());
+        }
     	break;
 
     case 3: // Data Size
@@ -84,7 +90,7 @@ void opti_serial_pub::EnQueue(uint8_t data){
   }
 
   // Decode
-  if (idx >= packet_size)
+  if (idx >= packet_size && packet_size != 0)
   {
     if(POSE_ID(packet_id)){
       Decode_poses(packet_buf);
@@ -106,10 +112,13 @@ void opti_serial_pub::Decode_poses(vector<uint8_t> packet){
 
     // CRC check
     temp_c = 0;
-    for(size_t i=0; i<packet.size()-1; ++i){
+    for(size_t i=0; i<packet.size()-2; ++i){
       temp_c ^= packet[i];
     }
-    if(temp_c != packet.back()) return;
+    if(temp_c != packet.back()){
+    RCLCPP_INFO(get_logger(), "CRC_fail: %x %x",temp_c, packet.back());
+    return;
+    }
 
     // Data Decode
     for(size_t i=0; i<N_rigids; ++i){
