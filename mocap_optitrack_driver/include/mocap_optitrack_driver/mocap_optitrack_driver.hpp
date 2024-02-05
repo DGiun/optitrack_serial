@@ -118,7 +118,7 @@ protected:
   // Serial
   bool f_serial_;
   std::string port_;
-  uint16_t buad_;
+  int serial_buad_;
   uint8_t packet[256];
 };
 

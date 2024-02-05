@@ -52,7 +52,7 @@ OptitrackDriverNode::OptitrackDriverNode()
   // Serial Port
   declare_parameter<bool>("serial", false);
   declare_parameter<std::string>("serial_port", "/dev/ttyUSB0");
-  declare_parameter<uint16_t>("serial_buad", 57600);
+  declare_parameter<int>("serial_buad", 57600);
 
   client = new NatNetClient();
   client->SetFrameReceivedCallback(process_frame_callback, this);
@@ -203,14 +203,21 @@ OptitrackDriverNode::process_frame(sFrameOfMocapData * data)
 
   // Serial Port
   if (mocap_rigid_body_pub_->get_subscription_count() > 0 && f_serial_){
-    uint16_t head = 0xFB01; // 0xFB: Header, 0x01: Pose
+    // uint16_t head = 0xfb01; // 0xFB: Header, 0x01: Pose
     uint8_t idx=0;
     uint8_t temp_c;
     float temp_f;
 
     // Header - 2 byte
-    memcpy(packet,&head,sizeof(uint16_t));
-    idx += sizeof(uint16_t);
+    // memcpy(packet,&head,sizeof(uint16_t));
+    // idx += sizeof(uint16_t);
+
+    uint8_t head=0xfb;
+    memcpy(packet,&head,sizeof(uint8_t));
+    idx += sizeof(uint8_t);
+    uint8_t ID=0x01;
+    memcpy(packet+idx,&ID,sizeof(uint8_t));
+    idx += sizeof(uint8_t);
     
     // Data Size - 1 byte , Data Size = 3 +(number of rigid * 25) +1
     temp_c = static_cast<uint8_t>( 4 +(data->nRigidBodies*25) );
@@ -262,6 +269,12 @@ OptitrackDriverNode::process_frame(sFrameOfMocapData * data)
     memcpy(packet + idx, &temp_c, sizeof(uint8_t));
     idx += sizeof(uint8_t);
 
+    // Debug
+    // for(size_t i=0; i<idx; ++i){
+    //   std::cout <<std::to_string(packet[i])<<' ';
+    // }
+    // std::cout<<std::endl;
+
     ser.write_some(boost::asio::buffer(&packet, idx));
   }
 }
@@ -287,9 +300,11 @@ OptitrackDriverNode::on_configure(const rclcpp_lifecycle::State & state)
   // Open Serial Port
   if (f_serial_)  {
     ser.open(port_);
-    ser.set_option(boost::asio::serial_port_base::baud_rate(buad_));
+    ser.set_option(boost::asio::serial_port_base::baud_rate(serial_buad_));
     if (ser.is_open())    {
       RCLCPP_INFO(get_logger(), "Serial Port initialized\n");
+      std::cout<<"Port: "<<port_<<std::endl;
+      std::cout<<"Buad: "<<serial_buad_<<std::endl;
     }
     else    {
       RCLCPP_INFO(get_logger(), "Fail Serial Port initialized\n");
@@ -448,7 +463,7 @@ OptitrackDriverNode::initParameters()
   // Serial Port
   get_parameter<bool>("serial", f_serial_);
   get_parameter<std::string>("serial_port", port_);
-  get_parameter<uint16_t>("serial_buad", buad_);
+  get_parameter<int>("serial_buad", serial_buad_);
 }
 
 }  // namespace mocap_optitrack_driver
