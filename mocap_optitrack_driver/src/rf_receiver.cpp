@@ -19,44 +19,55 @@ opti_serial_pub::opti_serial_pub()
     this->declare_parameter<uint8_t>("rigid_id", 1);
     this->declare_parameter<string>("topic_name", "/mavros/vision_pose/pose");
     this->declare_parameter<bool>("ridids_pub", false);
+    this->declare_parameter<bool>("serial", false);
     this->declare_parameter<string>("serial_port", "/dev/ttyUSB0");
     this->declare_parameter<int>("serial_buad", 57600);
 
     this->get_parameter<uint8_t>("rigid_id", my_id);
     this->get_parameter<std::string>("topic_name", topic_name);
     this->get_parameter<bool>("ridids_pub", f_poses);
+    this->get_parameter<bool>("serial", f_serial);
     this->get_parameter<std::string>("serial_port", serial_port);
     this->get_parameter<int>("serial_buad", serial_buad);
     
     pose_pub = this->create_publisher<geometry_msgs::msg::PoseStamped>(topic_name, 10);
     poses_pub = this->create_publisher<geometry_msgs::msg::PoseArray>("/opti/poses", 10);
 
-    port.open(serial_port);
-    port.set_option(boost::asio::serial_port_base::baud_rate(serial_buad));
-    if (port.is_open()){
-      RCLCPP_INFO(get_logger(), "Serial Port Open");
-      std::cout<<"Serial Port:"<<serial_port<<std::endl;
-      std::cout<<"Serial Buad:"<<serial_buad<<std::endl;
+    rigid_sub = this->create_subscription<mocap4r2_msgs::msg::RigidBodies>(
+      "/rigid_bodies", 10, std::bind(&opti_serial_pub::rigid_callback, this, _1));
+
+    
+    if(f_serial){
+      port.open(serial_port);
+      port.set_option(boost::asio::serial_port_base::baud_rate(serial_buad));
+      if (port.is_open()){
+        RCLCPP_INFO(get_logger(), "Serial Port Open");
+        std::cout << "Serial Port:" << serial_port << std::endl;
+        std::cout << "Serial Buad:" << serial_buad << std::endl;
+      }
+      else
+        RCLCPP_INFO(get_logger(), "Serial Port Close");
     }
-    else RCLCPP_INFO(get_logger(), "Serial Port Close");
 
     timer_ = this->create_wall_timer(
-        5ms, std::bind(&opti_serial_pub::timer_callback, this));
+        1ms, std::bind(&opti_serial_pub::timer_callback, this));
 }
 
 opti_serial_pub::~opti_serial_pub()
 {
-    if(port.is_open())  port.close();
+    if(f_serial && port.is_open())  port.close();
 }
 
 void opti_serial_pub::timer_callback()
 {
+  if(f_serial){
     uint n = port.read_some(boost::asio::buffer(buffer, 512));
     if (n != 0){
         for (size_t i=0; i<n; ++i){
             EnQueue(buffer[i]);
         }
     }
+  }
 }
 
 void opti_serial_pub::EnQueue(uint8_t data){
@@ -123,7 +134,8 @@ void opti_serial_pub::Decode_poses(vector<uint8_t> packet){
     // Data Decode
     for(size_t i=0; i<N_rigids; ++i){
         // Rigid_ID
-        rigid_ID = *data+idx;
+        rigid_ID = *(uint8_t *)(data+idx);
+        idx += sizeof(uint8_t);
         if(multi_rigid.poses.size() < rigid_ID)
           multi_rigid.poses.resize(rigid_ID);
 
@@ -162,4 +174,22 @@ void opti_serial_pub::Decode_poses(vector<uint8_t> packet){
       multi_rigid.header.frame_id = "map";
       poses_pub->publish(multi_rigid);
     }
+}
+
+void opti_serial_pub::rigid_callback(const mocap4r2_msgs::msg::RigidBodies::SharedPtr msg){
+  if(!f_serial){
+    geometry_msgs::msg::PoseStamped my_rigid;
+    my_rigid.header.stamp = this->get_clock()->now();
+    my_rigid.header.frame_id = "map";
+
+    my_rigid.pose.position.x = msg->rigidbodies[my_id - 1].pose.position.x;
+    my_rigid.pose.position.y = msg->rigidbodies[my_id - 1].pose.position.y;
+    my_rigid.pose.position.z = msg->rigidbodies[my_id - 1].pose.position.z;
+
+    my_rigid.pose.orientation.x = msg->rigidbodies[my_id - 1].pose.orientation.x;
+    my_rigid.pose.orientation.y = msg->rigidbodies[my_id - 1].pose.orientation.y;
+    my_rigid.pose.orientation.z = msg->rigidbodies[my_id - 1].pose.orientation.z;
+    my_rigid.pose.orientation.w = msg->rigidbodies[my_id - 1].pose.orientation.w;
+    pose_pub->publish(my_rigid);
+  }
 }
