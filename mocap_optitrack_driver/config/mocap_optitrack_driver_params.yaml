@@ -26,13 +26,14 @@ mocap_optitrack_driver_node:
     qos_depth: 10                         # 10 / 100 / 1000
     serial: true
     serial_port: "/dev/ttyUSB0"
-    serial_buad: 57600              # 57600 / 115200 / 230400 / 460800 / 921600
+    serial_buad: 115200              # 57600 / 115200 / 230400 / 460800 / 921600
 
 optitrack_serial:
   ros__parameters:
     rigid_id: 1
     topic_name: "/mavros/vision_pose/pose"
     ridids_pub: false
+    serial: true
     serial_port: "/dev/ttyUSB0"
-    serial_buad: 57600
+    serial_buad: 115200       # 57600 / 115200 / 230400 / 460800 / 921600
     
