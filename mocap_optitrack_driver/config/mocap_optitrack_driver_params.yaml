@@ -5,12 +5,12 @@ mocap_optitrack_driver_node:
     connection_type: "Multicast" # Unicast / Multicast
 
     ## Wi-Fi
-    # server_address: "199.188.177.5"
-    # local_address: "199.188.177.6"
+    server_address: "199.188.177.5"
+    local_address: "199.188.177.6"
     
     ## Wired
-    server_address: "192.168.0.2"
-    local_address: "192.168.0.1"
+    # server_address: "192.168.0.2"
+    # local_address: "192.168.0.1"
 
     multicast_address: "239.255.42.99"
     server_command_port: 1510
@@ -24,7 +24,7 @@ mocap_optitrack_driver_node:
     qos_history_policy: "keep_all"         # keep_all / keep_last
     qos_reliability_policy: "best_effort"  # best_effort / reliable
     qos_depth: 10                         # 10 / 100 / 1000
-    serial: true
+    serial: false
     serial_port: "/dev/ttyUSB0"
     serial_buad: 115200              # 57600 / 115200 / 230400 / 460800 / 921600
 
@@ -33,7 +33,7 @@ optitrack_serial:
     rigid_id: 1
     topic_name: "/mavros/vision_pose/pose"
     ridids_pub: false
-    serial: true
+    serial: true              # if False is using RTPS
     serial_port: "/dev/ttyUSB0"
     serial_buad: 115200       # 57600 / 115200 / 230400 / 460800 / 921600
     
