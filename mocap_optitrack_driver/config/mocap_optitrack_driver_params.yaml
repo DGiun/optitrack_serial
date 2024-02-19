@@ -24,7 +24,7 @@ mocap_optitrack_driver_node:
     qos_history_policy: "keep_all"         # keep_all / keep_last
     qos_reliability_policy: "best_effort"  # best_effort / reliable
     qos_depth: 10                         # 10 / 100 / 1000
-    serial: false
+    serial: true
     serial_port: "/dev/ttyUSB0"
     serial_buad: 115200              # 57600 / 115200 / 230400 / 460800 / 921600
 
