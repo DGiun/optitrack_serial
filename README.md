@@ -9,6 +9,7 @@ Install dependencies:
 ```
 sudo apt install python3-vcstool
 vcs import < mocap4ros2_optitrack/dependency_repos.repos
+rm -rf mocap4ros2_optitrack
 ```
 Compiling workspace:
 ```
@@ -22,6 +23,12 @@ source install/setup.bash
 Download Serial repo:
 ```
 git clone https://github.com/DGiun/optitrack_serial.git
+git checkout arm
+```
+Build Package
+```
+cd ~/ros2_ws
+colcon build --packages-select optitrack_serial
 ```
 Source workspace:
 ```
@@ -31,17 +38,13 @@ if Setup your optitrack configuration:
 ```
 /src/optitrack_serial/mocap_optitrack_driver/config/mocap_optitrack_driver_params.yaml
 ```
+Permission of Serial USB
+```
+sudo chmod 666 /dev/ttyUSB0
+```
 Launch optitrack system:
 ```
-ros2 launch optitrack_serial optitrack2.launch.py
-```
-Check that Optitrack configuration works fine and is connected. As the driver node is a lifecycle node, you should transition to activate:
-```
-ros2 lifecycle set /mocap_optitrack_driver_node activate
-```
-Visualize in rViz:
-```
-ros2 launch mocap_marker_viz mocap_marker_viz.launch.py mocap_system:=optitrack
+ros2 launch optitrack_serial receiver.launch.py 
 ```
 ## Error
 if error by tf2_geometry_msg

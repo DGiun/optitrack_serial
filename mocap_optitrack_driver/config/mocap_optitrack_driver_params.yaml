@@ -26,7 +26,7 @@ rf_receiver_node:
     rigid_id: 1
     topic_name: "/mavros/vision_pose/pose"
     ridids_pub: false
-    serial: true
+    serial: true              # if False is using RTPS             
     serial_port: "/dev/ttyUSB0"
     serial_buad: 115200       # 57600 / 115200 / 230400 / 460800 / 921600
     
