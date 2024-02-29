@@ -22,8 +22,7 @@ source install/setup.bash
 ## Serial Repo
 Download Serial repo:
 ```
-git clone https://github.com/DGiun/optitrack_serial.git
-git checkout arm
+git clone -b arm --single-branch https://github.com/DGiun/optitrack_serial.git
 ```
 Build Package
 ```
